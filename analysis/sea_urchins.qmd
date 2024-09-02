@@ -1,7 +1,7 @@
 ---
 title: "Using tidymodels package - Part 1 - Sea urchins"
 format: 
-    pdf:
+    html:
         code-fold: show
         code-tools: true
 ---
@@ -15,6 +15,7 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 library(tidymodels)
+library(broom.mixed)
 ```
 
 ```{r}
@@ -39,10 +40,9 @@ summary(dat)
 ```
 
 ```{r}
-dat |>
-    ggplot(aes(x=initial_volume, y=width, color=food_regime)) +
-    geom_point() +
-    geom_smooth(method="lm") +
+my_graph <- ggplot() +
+    geom_point(aes(x=initial_volume, y=width, color=food_regime), data=dat) +
+    # geom_smooth(method="lm") +
     facet_wrap(~food_regime) +
     scale_x_continuous(limits=c(0, NA)) +
     scale_y_continuous(limits=c(0, NA)) +
@@ -51,6 +51,76 @@ dat |>
          y="Final width",
          color="Food regime",
          title="Sea urchin growth by initial volume and food regime")
+
+my_graph
 ```
 
 ## Model the data
+
+```{r}
+linear_model <- linear_reg() |>
+    set_engine("lm")
+
+model1 <- linear_model |>
+    fit(width ~ initial_volume + food_regime, data=dat)
+
+fitting_formula <- width ~ initial_volume * food_regime
+
+model2 <- linear_model |>
+    fit(fitting_formula, data=dat)
+
+tidy(model1)
+tidy(model2)
+```
+
+```{r}
+new_data <- tibble(initial_volume=c(20, 20, 20), food_regime=c("Initial", "High", "Low"))
+
+weight_pred_mean <- predict(model2, new_data)
+weight_conf_int_pred <- predict(model2, new_data, type="conf_int")
+weight_pred <- bind_cols(new_data,weight_pred_mean, weight_conf_int_pred) |>
+    mutate(food_regime = factor(food_regime))
+
+weight_pred
+```
+
+```{r}
+my_graph_with_preds <- my_graph +
+    geom_errorbar(aes(x=initial_volume, ymin=.pred_lower, ymax=.pred_upper,
+                      group=food_regime), data=weight_pred, color="forestgreen", width=2) +
+    geom_point(aes(x=initial_volume, y=.pred, group=food_regime), data=weight_pred, 
+              shape=21, color="forestgreen", fill="darkgreen", stroke=1) +
+    labs(subtitle="With prediction from model2")
+
+my_graph_with_preds
+```
+
+```{r}
+linear_model_bayes <- linear_reg() |>
+    set_engine("stan")
+
+
+model3_bayes <- linear_model_bayes |>
+    fit(fitting_formula, data=dat)
+
+tidy(model3_bayes)
+```
+
+```{r}
+weight_predict_bayes <- new_data |>
+    bind_cols(predict(model3_bayes, new_data)) |>
+    bind_cols(predict(model3_bayes, new_data, type="conf_int"))
+
+weight_predict_bayes
+```
+
+```{r}
+my_graph_with_all_preds <- my_graph_with_preds +
+    geom_errorbar(aes(x=initial_volume, ymin=.pred_lower, ymax=.pred_upper,
+                      group=food_regime), data=weight_predict_bayes, color="deeppink", width=2) +
+    geom_point(aes(x=initial_volume, y=.pred, group=food_regime), data=weight_predict_bayes, 
+              shape=21, color="pink", fill="deeppink", stroke=1) +
+    labs(subtitle="With prediction from model2 and model3_bayes")
+
+my_graph_with_all_preds
+```
