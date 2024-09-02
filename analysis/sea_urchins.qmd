@@ -1,0 +1,56 @@
+---
+title: "Using tidymodels package - Part 1 - Sea urchins"
+format: 
+    pdf:
+        code-fold: show
+        code-tools: true
+---
+
+## Code setup
+
+```{r}
+#| output: false
+library(here)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(tidymodels)
+```
+
+```{r}
+#| output: FALSE
+theme_set(theme_gray(base_size = 12)) + 
+    theme_update(
+        legend.position = "bottom",
+        strip.background = element_blank(),
+    )
+```
+
+## Load and explore the data
+
+```{r}
+dat <- read_csv(here::here("data/sea_urchins.csv")) |>
+    # read_csv("https://tidymodels.org/start/models/urchins.csv") |>
+    # rename(food_regime = TREAT, initial_volume=IV, width=SUTW) |>
+    mutate(food_regime = factor(food_regime))
+
+glimpse(dat)
+summary(dat)
+```
+
+```{r}
+dat |>
+    ggplot(aes(x=initial_volume, y=width, color=food_regime)) +
+    geom_point() +
+    geom_smooth(method="lm") +
+    facet_wrap(~food_regime) +
+    scale_x_continuous(limits=c(0, NA)) +
+    scale_y_continuous(limits=c(0, NA)) +
+    scale_color_viridis_d(option="rocket", end=0.7) +
+    labs(x="Initial volume",
+         y="Final width",
+         color="Food regime",
+         title="Sea urchin growth by initial volume and food regime")
+```
+
+## Model the data
