@@ -1,0 +1,93 @@
+---
+title: "Using tidymodels package - Part 2 - New York city flights"
+format:
+  html:
+    code-fold: show
+    code-tools: true
+---
+
+## Code setup
+```{r}
+#| output: false
+library(here)
+library(readr)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(tidymodels)
+library(nycflights13)
+```
+
+```{r}
+#| output: FALSE
+theme_set(theme_gray(base_size = 12)) + 
+    theme_update(
+        legend.position = "bottom",
+        strip.background = element_blank(),
+    )
+```
+
+## Load and explore the data
+```{r}
+dat <- flights |>
+    filter(!is.na(arr_delay)) |>
+    mutate(flight_date = as_date(time_hour),
+           arr_delay_fct = factor(if_else(arr_delay >= 30, "delayed", "ontime"))) |>
+    #inner_join(weather, by=c("origin", "time_hour")) |>
+    select(dep_time, flight, origin, dest, air_time, distance, 
+           carrier, flight_date, arr_delay, arr_delay_fct, time_hour) |>
+    mutate_if(is.character, as.factor)
+```
+
+**What proportion of flights is delayed?**
+
+```{r}
+dat |>
+  count(arr_delay_fct) |>
+  mutate(proportion_of_flights = n / sum(n))
+```
+
+**Understanding interactions between ariline, flight destinations, and flight distance**
+
+```{r}
+sort(table(dat$dest), decreasing = TRUE)
+```
+
+```{r}
+sort(table(dat$carrier), decreasing = TRUE)
+```
+
+The graph below shows that, perhaps unsuprisingly, there is a relationship between airline and flight distance...
+
+```{r}
+#| fig.height: 10
+#| fig.width: 16
+
+dat |>
+ ggplot() +
+ geom_histogram(aes(x=distance, fill=arr_delay_fct), bins=70) +
+ facet_wrap(~carrier) +
+ scale_fill_viridis_d(option = "plasma", end=0.7) +
+    labs(x="Flight distance",
+         y="Number of flights",
+         color="Flight delayed or on-time?",
+         title="Number of flights for each airline by distance and whether delayed or not")
+```
+
+... but flight distance itself is not a good predictor for delay, albeit it appears that longer-distance flights might be less likely delayed:
+```{r}
+#| fig.height: 10
+#| fig.width: 16
+
+dat |>
+    ggplot() +
+    geom_point(aes(x=distance, y=arr_delay, color=arr_delay_fct), alpha=0.2) +
+    facet_wrap(~paste("Airline:", carrier), scales="free") +
+    scale_color_viridis_d(option = "plasma", end=0.7) +
+    labs(x="Flight distance",
+         y="Arrival delay (minutes)",
+         color="Flight delayed or on-time?",
+         title="Arrival delay by airline and flight distance")
+
+
+```

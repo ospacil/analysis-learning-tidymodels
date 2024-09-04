@@ -289,6 +289,26 @@
       ],
       "Hash": "a4652c36d1f8abfc3ddf4774f768c934"
     },
+    "broom.mixed": {
+      "Package": "broom.mixed",
+      "Version": "0.2.9.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "broom",
+        "coda",
+        "dplyr",
+        "forcats",
+        "furrr",
+        "methods",
+        "nlme",
+        "purrr",
+        "stringr",
+        "tibble",
+        "tidyr"
+      ],
+      "Hash": "c4e6c14e4d92d7b2d29ab0758184774a"
+    },
     "bslib": {
       "Package": "bslib",
       "Version": "0.8.0",
@@ -396,6 +416,17 @@
         "vctrs"
       ],
       "Hash": "3dcaebd52554438d12989e5061e15de8"
+    },
+    "coda": {
+      "Package": "coda",
+      "Version": "0.19-4.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "lattice"
+      ],
+      "Hash": "af436915c590afc6fffc3ce3a5be1569"
     },
     "codetools": {
       "Package": "codetools",
@@ -685,6 +716,22 @@
         "rlang"
       ],
       "Hash": "c2efdd5f0bcd1ea861c2d4e2a883a67d"
+    },
+    "forcats": {
+      "Package": "forcats",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "cli",
+        "glue",
+        "lifecycle",
+        "magrittr",
+        "rlang",
+        "tibble"
+      ],
+      "Hash": "1a0a9a3d5083d0d573c4214576f1e690"
     },
     "foreach": {
       "Package": "foreach",
@@ -1434,6 +1481,17 @@
         "R"
       ],
       "Hash": "df58958f293b166e4ab885ebcad90e02"
+    },
+    "nycflights13": {
+      "Package": "nycflights13",
+      "Version": "1.0.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "tibble"
+      ],
+      "Hash": "61eb941328b49a62d7f9816dfed7d959"
     },
     "parallelly": {
       "Package": "parallelly",
