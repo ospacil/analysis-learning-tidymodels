@@ -88,6 +88,76 @@ dat |>
          y="Arrival delay (minutes)",
          color="Flight delayed or on-time?",
          title="Arrival delay by airline and flight distance")
+```
 
+## Build a logistic regression model
 
+```{r}
+set.seed(123)
+dat_split <- initial_split(select(dat, -arr_delay), prop=3/4)
+dat_train <- training(dat_split)
+dat_test <- testing(dat_split)
+```
+
+```{r}
+dat_recipe <- recipe(arr_delay_fct ~ ., data=dat_train) |>
+    update_role(flight, time_hour, new_role="identity") |>
+    step_date(flight_date, features = c("dow", "month")) |>
+    step_holiday(flight_date, 
+                 holidays = timeDate::listHolidays("US"), 
+                 keep_original_cols = FALSE) |>
+    step_dummy(all_nominal_predictors()) |> # create dummy numerical variables out of factor columns
+    step_zv(all_predictors()) # remove predictors with zero variation, i.e. single-valued columns
+
+print(dat_recipe)
+```
+
+```{r}
+model1 <- logistic_reg() |>
+    set_engine("glm")
+
+fitting_workflow1 <- workflow() |>
+    add_model(model1) |>
+    add_recipe(dat_recipe)
+
+print(fitting_workflow1)
+```
+
+**Apply the model workflow on training data:**
+```{r}
+fitted_model1 <- fitting_workflow1 |>
+    fit(dat_train)
+```
+
+```{r}
+fitted_model1 |>
+    extract_recipe()
+```
+
+```{r}
+fitted_model1 |>
+    extract_fit_engine() |>
+    tidy()
+```
+
+**Run the fitted model on test data, and evaluate performance:**
+```{r}
+dat_test_with_predictions <- augment(fitted_model1, dat_test)
+```
+
+```{r}
+glimpse(dat_test_with_predictions)
+
+dat_test_with_predictions |> roc_auc(truth=arr_delay_fct, .pred_delayed)
+```
+
+```{r}
+dat_test_with_predictions |>
+    roc_curve(truth=arr_delay_fct, .pred_delayed) |>
+    ggplot() +
+    geom_path(aes(x=1-specificity, y=sensitivity), color="deeppink") +
+    geom_abline(slope=1, intercept=0, color="black", linetype=2) +
+    labs(x="False positive rate (propotion of flights incorrectly predicted as delayed)",
+         y="True positive rate (propotion of flights correctly predicted as delayed)",
+         title="ROC curve for model1")
 ```
